@@ -3,8 +3,8 @@ import { createClient, newDIDSessionFromPrivateKey } from '@0xintuition/api'
 import { arbitrumGoerli } from 'viem/chains'
 import pino from 'pino'
 
-// const API_BASE_URL = 'http://api.intuition.cafe'
-const API_BASE_URL = 'http://localhost:8080'
+const API_BASE_URL = 'http://api.intuition.cafe'
+// const API_BASE_URL = 'http://localhost:8080'
 
 const log = pino()
 consola.options.formatOptions.colors = true
