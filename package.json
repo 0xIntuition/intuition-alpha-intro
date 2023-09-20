@@ -1,0 +1,24 @@
+{
+  "name": "intuition-alpha-intro",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts | pino-pretty"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@0xintuition/api": "^0.0.12",
+    "@didtools/cacao": "^2.1.0",
+    "@types/qs": "^6.9.8",
+    "did-session": "^2.0.1",
+    "pino": "^8.15.1",
+    "pino-pretty": "^10.2.0",
+    "qs": "^6.11.2",
+    "viem": "^1.11.0"
+  }
+}
