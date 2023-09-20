@@ -1,4 +1,3 @@
-import { consola } from 'consola'
 import { createClient, newDIDSessionFromPrivateKey } from '@0xintuition/api'
 import { arbitrumGoerli } from 'viem/chains'
 import pino from 'pino'
@@ -7,8 +6,25 @@ const API_BASE_URL = 'http://api.intuition.cafe'
 // const API_BASE_URL = 'http://localhost:8080'
 
 const log = pino()
-consola.options.formatOptions.colors = true
-
+/**
+ * *Prerequisites*
+ *
+ * **Intuition Current Status**
+ * - We have just begun sharing our "alpha" api with select parties
+ * - Downside: There will be some bugs
+ * - Upside: Give us a holler and we'll fix them FREAKY FAST
+ *
+ * **What is an Identity?**
+ *  - An "Identity" is the smallest possible unit of content in Intuition
+ *  - Represents a person, place, thing, idea, word, etc...
+ *  - Further context and information about the entity can be derived via the claims made about it (and attested to)
+ *
+ * **What is a Claim?**
+ *  - Ordered grouping of Identities in the form <subject> --> <predicate> --> <object>
+ *  - A basic example of a Claim would be "John" --> "is" --> "really really really cool"
+ *  - Claims can be attested to (and attested against) by users of Intuition (and the apps built on top of it)
+ *  - Duplicate claims cannot be created and reuse of existing statements is encouraged to the degree it seems fit
+ */
 async function main() {
   /**
    * Let's build an app called.....
@@ -17,6 +33,17 @@ async function main() {
    * ░░█░░█░█░░█░░█▀▀░█▀▄░█░█░█▀▀░░█░░░░█▀█░█░█░░█░░█░█░█░█░▀▀█
    * ░▀▀▀░▀░▀░░▀░░▀▀▀░▀░▀░▀░▀░▀▀▀░░▀░░░░▀░▀░▀░▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀
    *
+   * Here I'll be using our API client (docs coming soon), however everything
+   * done here can also be accomplished via fetch(...)
+   *
+   * Intuition enables folks to say anything about anything, but as a
+   * developer, how does that help me...
+   * - empower users?
+   * - retain a flexible data layer?
+   * - harness the wisdom of the crowds?
+   *
+   * Hopefully this should serve as an answer to two of those (3 coming soon)
+   *
    * An app is no fun by yourself, let's create clients for two users...
    */
   log.info(`Let's build 'Internet Amigos' on Intuition!`)
@@ -24,6 +51,7 @@ async function main() {
     process.env.PRIVATE_KEY! as `0x${string}`,
     { chainId: arbitrumGoerli.id.toString() }
   )
+
   log.info('prepare for api interactions:')
   log.info({ session1: session1.serialize() }, '- session 1')
   const session2 = await newDIDSessionFromPrivateKey(
@@ -43,13 +71,14 @@ async function main() {
     session: session2.serialize(),
   })
   log.info('- client 2')
+
   log.info('preparation complete')
   /**
    * Alrighty so all good apps have a way to identify users within the system, let's follow suit!
    *
    * To do this, we'll create an identity for each user with the following fields:
-   *  display_name: My User <n>
-   *  description: I <3 Intuition
+   *  - display_name
+   *  - description
    */
   // try creating both users
   log.info('creating users if needed...')
@@ -199,7 +228,7 @@ async function main() {
    * what fields their profiles contain.
    *
    * "My User" wants the fields "Favorite Ice Cream" and "Shoe Width"
-   * "My Other User" wants the fields "Worst Superhero" and "Sense of Smell Ranking"
+   * "My Other User" wants the fields "Worst Superhero" and "Sense of Smell Ranking (global)"
    *
    * We're going to use another **special predicate** here called "Internet Amigos Profile"
    * to designate what makes up a user's profile
@@ -250,7 +279,7 @@ async function main() {
       description: 'How wide are those tootsies?',
     })
     const { data: user1FootWidthValue } = await client1.identity.create.mutate({
-      display_name: 'Fred Flinstone',
+      display_name: 'Fred Flintstone',
       description: 'Yabba Dabba Dooooooooooo!',
     })
     // "My User" fields are tied to the profile pointer via claims
@@ -261,6 +290,10 @@ async function main() {
       object_id: user1IceCreamValue.identity_id,
       direction: true,
     })
+    log.info(
+      { user1IceCreamClaim },
+      'created claim "PROFILE1: My User" --> "Favorite Ice Cream" --> "Superman"'
+    )
     // "PROFILE1: My User" --> "Foot Width" --> "Fred Flintstone"
     const { data: user1FootWidthClaim } = await client1.claim.create.mutate({
       subject_id: user1ProfilePointerIdentity.identity_id,
@@ -268,6 +301,10 @@ async function main() {
       object_id: user1FootWidthValue.identity_id,
       direction: true,
     })
+    log.info(
+      { user1FootWidthClaim },
+      'created claim "PROFILE1: My User" --> "Foot Width" --> "Fred Flintstone"'
+    )
     /**
      * Finally, connect "My User" with the profile pointer "PROFILE1: My User"
      */
@@ -328,22 +365,30 @@ async function main() {
       description: 'Here we are...',
     })
     // "My User" fields are tied to the profile pointer via claims
-    // "PROFILE1: My Other User" --> "Worst Superhero" --> "Superman"
+    // "PROFILE2: My Other User" --> "Worst Superhero" --> "Superman"
     const { data: user2SuperheroClaim } = await client2.claim.create.mutate({
       subject_id: user2ProfilePointerIdentity.identity_id,
       predicate_id: user2SuperheroField.identity_id,
       object_id: user2SuperheroValueID,
       direction: true,
     })
-    // "PROFILE1: My Other User" --> "Sense of Smell Ranking (global)" --> "TOP!"
+    log.info(
+      { user2SuperheroClaim },
+      'created claim "PROFILE2: My Other User" --> "Worst Superhero" --> "Superman"'
+    )
+    // "PROFILE2: My Other User" --> "Sense of Smell Ranking (global)" --> "TOP!"
     const { data: user2SmellClaim } = await client2.claim.create.mutate({
       subject_id: user2ProfilePointerIdentity.identity_id,
       predicate_id: user2SmellField.identity_id,
       object_id: user2SmellValue.identity_id,
       direction: true,
     })
+    log.info(
+      { user2SmellClaim },
+      'created claim "PROFILE2: My Other User" --> "Worst Superhero" --> "Superman"'
+    )
     /**
-     * Finally, connect "My Other User" with the profile pointer "PROFILE1: My User"
+     * Finally, connect "My Other User" with the profile pointer "PROFILE2: My User"
      */
     log.info('creating "My Other User" profile claim...')
     const { data: user2ProfileClaim } = await client2.claim.create.mutate({
